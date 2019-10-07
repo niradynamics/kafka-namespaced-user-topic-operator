@@ -1,0 +1,6 @@
+#
+
+class globalconf:
+    conf = None
+
+

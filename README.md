@@ -1,0 +1,1 @@
+Kafka Namespaced User Topic Operator
