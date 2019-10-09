@@ -45,3 +45,10 @@ def main():
     kopf.configure(verbose=args.verbose)
 
     run_kopf(args.namespace)
+
+
+def _update_or_create(obj):
+    if obj.exists():
+        obj.update()
+    else:
+        obj.create()

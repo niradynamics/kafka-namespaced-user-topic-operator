@@ -12,6 +12,7 @@ rules:
   - apiGroups: [""]
     resources: [events]
     verbs: [create]
+
   - apiGroups: [kafka.strimzi.io]
     resources: [kafkausers, kafkatopics]
     verbs: [create, patch]
@@ -37,4 +38,4 @@ rules:
 
   - apiGroups: [""]
     resources: [secrets]
-    verbs: [create, patch]
+    verbs: [create, patch, get]

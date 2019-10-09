@@ -1,0 +1,16 @@
+apiVersion: skaffold/v1beta15
+kind: Config
+metadata:
+  name: kafka-namespaced-user-topic-operator
+build:
+  artifacts:
+    - image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto
+deploy:
+  helm:
+    releases:
+      - name: knuto
+        chartPath: chart
+        namespace: nira-system
+        values:
+          image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto
+
