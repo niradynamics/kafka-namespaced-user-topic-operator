@@ -4,3 +4,5 @@ kafkauser_source_namespaces:
   - production
   - latest
   - dev
+secret_type_to_bootstrap_server:
+  "scram-sha-512": "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"

@@ -15,15 +15,23 @@ spec:
         knuto: secrets
         app: knuto
     spec:
-      serviceAccountName: knuto-operator-account
+      serviceAccountName: knuto-secrets
       containers:
       - name: knuto-secrets
         image: {{ .Values.image }}
         command:
         - knuto-secrets
         - -v
+        {{- range .Values.kafkauser_source_namespaces }}
+        - --kafka-user-topic-source-namespace
+        - {{ . }}
+        {{- end }}
+        {{- range $secret_type, $server := .Values.secret_type_to_bootstrap_server }}
+        - --secret-type-to-bootstrap-server
+        - {{ $secret_type }}={{ $server }}
+        {{- end }}
         - {{ .Values.strimzi_namespace }}
-{{ range .Values.kafkauser_source_namespaces }}
+{{ range $idx, $namespace := .Values.kafkauser_source_namespaces }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -42,13 +50,15 @@ spec:
         knuto: kafkaentities-{{ . }}
         app: knuto
     spec:
-      serviceAccountName: knuto-operator-account
+      serviceAccountName: knuto-kafka-users-topics
       containers:
       - name: knuto-kafkaentities
         image: {{ $.Values.image }}
         command:
         - knuto-kafkauser
         - -v
-        - {{ . }}
+        - --kafka-user-topic-destination-namespace
+        - {{ $.Values.strimzi_namespace }}
+        - {{ $namespace }}
 {{ end }}
 

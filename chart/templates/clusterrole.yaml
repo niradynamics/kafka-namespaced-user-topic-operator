@@ -1,9 +1,7 @@
-# This one could be a Role, but that would mean we'd force
-# users to install this operator in the same namespace as the strimzi operator.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: knuto-role-strimzi-namespace
+  name: kopf-events
 rules:
   # Framework: posting the events about the handlers progress/errors.
   - apiGroups: [events.k8s.io]
@@ -12,10 +10,13 @@ rules:
   - apiGroups: [""]
     resources: [events]
     verbs: [create]
-
-  - apiGroups: [kafka.strimzi.io]
-    resources: [kafkausers, kafkatopics]
-    verbs: [create, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: knuto-read-secrets
+rules:
+  # knuto-secrets needs to read secrets from the Strimzi-managed namespace
   - apiGroups: [""]
     resources: [secrets]
     verbs: [list, watch, get, patch]
@@ -23,19 +24,37 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: knuto-role-kafkauser-topic-source-namespaces
+  name: knuto-write-secrets
 rules:
-  # Framework: posting the events about the handlers progress/errors.
-  - apiGroups: [events.k8s.io]
-    resources: [events]
-    verbs: [create]
+  # knuto-secrets needs to write secrets in the production/dev/latest etc namespaces
   - apiGroups: [""]
-    resources: [events]
-    verbs: [create]
+    resources: [secrets]
+    verbs: [get, list, create, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: knuto-kafkauser-read-kafka-user-topic
+rules:
   - apiGroups: [kafka.strimzi.io]
     resources: [kafkausers, kafkatopics]
     verbs: [list, get, watch, patch]
-
-  - apiGroups: [""]
-    resources: [secrets]
-    verbs: [create, patch, get]
+---
+# knuto-secrets reading kafkauser so it can set ownership on secrets
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: knuto-secrets-read-kafka-user
+rules:
+  - apiGroups: [kafka.strimzi.io]
+    resources: [kafkausers]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: knuto-kafkauser-write-kafka-user-topic
+rules:
+  - apiGroups: [kafka.strimzi.io]
+    resources: [kafkausers, kafkatopics]
+    verbs: [list, get, watch, patch, create, delete]

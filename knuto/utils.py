@@ -5,13 +5,13 @@ import os
 from copy import deepcopy
 
 import kopf
-import pyhocon
+from kopf.clients.auth import login_pykube, get_pykube_api
 
-from knuto.config import globalconf
+from .config import globalconf, state
 
 def _copy_object(obj):
     new_obj = deepcopy(obj)
-    for key in ["resourceVersion", "selfLink", "uid", "creationTimestamp", "generation"]:
+    for key in ["resourceVersion", "selfLink", "uid", "creationTimestamp", "generation", "finalizers"]:
         if key in new_obj["metadata"]:
             del new_obj["metadata"][key]
 
@@ -33,16 +33,20 @@ def run_kopf(namespace):
 script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 # This script dir is used from multiple functions
-def main():
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument("--config", "-c", default=os.path.join(script_dir, "knuto.conf"))
+def default_main(program_argparsers):
+    argparser = argparse.ArgumentParser(parents=program_argparsers, add_help=False)
     argparser.add_argument("--verbose", "-v", default=False, action='store_true')
-    argparser.add_argument("namespace")
+    argparser.add_argument("namespace", help="Namespace to watch for changes")
 
     args = argparser.parse_args()
 
-    globalconf.conf = pyhocon.ConfigFactory.parse_file(args.config)
     kopf.configure(verbose=args.verbose)
+
+
+    print(f"globalconf: {globalconf.current_values()}")
+
+    login_pykube()
+    state.api = get_pykube_api()
 
     run_kopf(args.namespace)
 

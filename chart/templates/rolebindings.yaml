@@ -1,29 +1,112 @@
+# Allow both operators to write to events in Strimzi namespace
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: knuto-strimzi-rolebinding
+  name: knuto-events-{{ .Values.strimzi_namespace }}
   namespace: {{ .Values.strimzi_namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: knuto-role-strimzi-namespace
+  name: kopf-events
 subjects:
 - kind: ServiceAccount
-  name: knuto-operator-account
+  name: knuto-secrets
   namespace: {{ .Release.Namespace }}
-{{ range .Values.kafkauser_source_namespaces }}
+- kind: ServiceAccount
+  name: knuto-kafkauser-write-kafka-user-topic
+  namespace: {{ .Release.Namespace }}
 ---
+# Allow secrets operator to read secrets from the Strimzi namespace
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: knuto-rolebinding
+  name: knuto-secrets-get-from-strimzi
+  namespace: {{ .Values.strimzi_namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knuto-read-secrets
+subjects:
+- kind: ServiceAccount
+  name: knuto-secrets
+  namespace: {{ .Release.Namespace }}
+{{ range .Values.kafkauser_source_namespaces }}
+---
+# Allow both operators to write events to all namespaces where we source KafkaUser/KafkaTopic
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: knuto-events-{{ . }}
   namespace: {{ . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: knuto-role-kafkauser-topic-source-namespaces
+  name: kopf-events
 subjects:
 - kind: ServiceAccount
-  name: knuto-operator-account
+  name: knuto-secrets
+  namespace: {{ $.Release.Namespace }}
+- kind: ServiceAccount
+  name: knuto-kafka-users-topics
+  namespace: {{ $.Release.Namespace }}
+---
+# Allow knuto-secrets to write secrets in namespaces where we source KafkaUser/KafkaTopic
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: knuto-write-secrets-{{ . }}
+  namespace: {{ . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knuto-write-secrets
+subjects:
+- kind: ServiceAccount
+  name: knuto-secrets
+  namespace: {{ $.Release.Namespace }}
+---
+# Allow KafkaUser/Topic operator to read KafkaUser/Topic in namespaces where we put them.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: knuto-read-kafka-user-topic-{{ . }}
+  namespace: {{ . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knuto-kafkauser-read-kafka-user-topic
+subjects:
+- kind: ServiceAccount
+  name: knuto-kafka-users-topics
+  namespace: {{ $.Release.Namespace }}
+---
+# Allow Secrets operator to read KafkaUser to get ownership information
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: knuto-secrets-read-kafka-user-{{ . }}
+  namespace: {{ . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knuto-secrets-read-kafka-user
+subjects:
+- kind: ServiceAccount
+  name: knuto-secrets
   namespace: {{ $.Release.Namespace }}
 {{ end }}
+---
+# Finally, allow the Kafka User/Topic operator to copy Kafkauser/KafkaTopic to the Strimzi namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: knuto-write-kafka-user-topics
+  namespace: {{ .Values.strimzi_namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knuto-kafkauser-write-kafka-user-topic
+subjects:
+- kind: ServiceAccount
+  name: knuto-kafka-users-topics
+  namespace: {{ .Release.Namespace }}
