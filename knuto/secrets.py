@@ -3,7 +3,7 @@ import kopf
 from kopf.clients.auth import login_pykube, get_pykube_api
 from pykube import Secret
 from .config import globalconf
-from .utils import _copy_object
+from .utils import _copy_object, main
 
 login_pykube()
 api = get_pykube_api()
@@ -13,7 +13,14 @@ api = get_pykube_api()
 def kafka_secret(body, namespace, name, logger, **kwargs):
     new_obj = _copy_object(body)
 
+    if "-" not in name:
+        logger.debug("Skipping secret as it doesn't have a "-" in its name")
+        return
 
+    (dst_namespace, dst_name) = name.split("-", maxsplit=1)
+
+    if dst_namespace not in globalconf.conf.get_list("knuto.source_namespaces"):
+        logger.info("Skipping as its name prefix is not in our list of destination namespaces")
 
     if "password" in new_obj["data"]:
         secret_type = "scram-sha-512"
@@ -39,9 +46,9 @@ bootstrap.servers={broker_bootstrap_servers}
         del new_secret.labels["strimzi.io/kind"]
 
         new_secret.annotations["knuto.niradynamics.se/source"] = f"{namespace}/{name}"
-        (new_namespace, new_name) = name.split("-", maxsplit=1)
-        new_secret.metadata["name"] = f"{new_name}-kafka-config"
-        new_secret.metadata["namespace"] = new_namespace
+        new_secret.metadata["name"] = f"{dst_name}-kafka-config"
+        new_secret.metadata["namespace"] = dst_namespace
+        logger.info("Creating %(namespace)s/%(name)s with a kafka-client.properties with SCRAM-SHA-256 configuration" % new_secret.metadata)
         new_secret.create()
         return {"copied_to": f"{new_namespace}/{new_name}"}
 

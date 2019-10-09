@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knuto-operator-secrets
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      knuto: secrets
+  template:
+    metadata:
+      labels:
+        knuto: secrets
+        app: knuto
+    spec:
+      serviceAccountName: knuto-operator-account
+      containers:
+      - name: knuto-secrets
+        image: {{ .Values.image }}
+        command:
+        - knuto-secrets
+        - -v
+        - {{ .Values.strimzi_namespace }}
+{{ range .Values.kafkauser_source_namespaces }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knuto-operator-kafkaentities-{{ . }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      knuto: kafkaentities-{{ . }}
+  template:
+    metadata:
+      labels:
+        knuto: kafkaentities-{{ . }}
+        app: knuto
+    spec:
+      serviceAccountName: knuto-operator-account
+      containers:
+      - name: knuto-kafkaentities
+        image: {{ $.Values.image }}
+        command:
+        - knuto-kafkauser
+        - -v
+        - {{ . }}
+{{ end }}
+

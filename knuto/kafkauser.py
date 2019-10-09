@@ -2,7 +2,8 @@ import kopf
 from kopf.clients.auth import login_pykube, get_pykube_api
 from pykube import object_factory
 
-from .utils import _copy_object
+
+from .utils import _copy_object, main
 from .config import globalconf
 
 login_pykube()
@@ -30,6 +31,4 @@ def create_fn(body, namespace, name, logger, **kwargs):
 @kopf.on.update("kafka.strimzi.io", "v1beta1", "kafkausers")
 def update_fn(spec, status, namespace, logger, **kwargs):
     logger.info(f"Saw an update of {spec} in {namespace}")
-
-
 

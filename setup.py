@@ -140,7 +140,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['kopf', 'pyhocon', "kubernetes"],  # Optional
+    install_requires=['kopf', 'pyhocon'],  # Optional
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
@@ -172,8 +172,8 @@ setup(
     # executes the function `main` from this package when invoked:
     entry_points={  # Optional
         'console_scripts': [
-            'knuto=knuto.cmd:main',
-            'secrets-only=knuto.secrets_cmd:main'
+            'knuto-kafkauser=knuto.kafkauser:main',
+            'knuto-secrets=knuto.secrets:main'
         ],
     },
 

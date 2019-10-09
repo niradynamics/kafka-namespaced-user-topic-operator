@@ -1,0 +1,40 @@
+# This one could be a Role, but that would mean we'd force
+# users to install this operator in the same namespace as the strimzi operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: knuto-role-strimzi-namespace
+rules:
+  # Framework: posting the events about the handlers progress/errors.
+  - apiGroups: [events.k8s.io]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [kafka.strimzi.io]
+    resources: [kafkausers, kafkatopics]
+    verbs: [create, patch]
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [list, watch, get, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: knuto-role-kafkauser-topic-source-namespaces
+rules:
+  # Framework: posting the events about the handlers progress/errors.
+  - apiGroups: [events.k8s.io]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [kafka.strimzi.io]
+    resources: [kafkausers, kafkatopics]
+    verbs: [list, get, watch, patch]
+
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [create, patch]
