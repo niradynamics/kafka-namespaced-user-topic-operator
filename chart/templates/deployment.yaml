@@ -5,6 +5,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
+    # We want exactly one replica running at all times, or we might get race conditions.
     type: Recreate
   selector:
     matchLabels:
@@ -40,6 +41,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
+    # We want exactly one replica running at all times, or we might get race conditions.
     type: Recreate
   selector:
     matchLabels:
