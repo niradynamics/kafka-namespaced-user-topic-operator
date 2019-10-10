@@ -30,14 +30,14 @@ subjects:
 - kind: ServiceAccount
   name: knuto-secrets
   namespace: {{ .Release.Namespace }}
-{{ range .Values.kafkauser_source_namespaces }}
+{{ range $namespace, $config := .Values.kafkauser_source_namespaces }}
 ---
 # Allow both operators to write events to all namespaces where we source KafkaUser/KafkaTopic
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: knuto-events-{{ . }}
-  namespace: {{ . }}
+  name: knuto-events-{{ $namespace }}
+  namespace: {{ $namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -54,8 +54,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: knuto-write-secrets-{{ . }}
-  namespace: {{ . }}
+  name: knuto-write-secrets-{{ $namespace }}
+  namespace: {{ $namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -69,8 +69,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: knuto-read-kafka-user-topic-{{ . }}
-  namespace: {{ . }}
+  name: knuto-read-kafka-user-topic-{{ $namespace }}
+  namespace: {{ $namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -84,8 +84,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: knuto-secrets-read-kafka-user-{{ . }}
-  namespace: {{ . }}
+  name: knuto-secrets-read-kafka-user-{{ $namespace }}
+  namespace: {{ $namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

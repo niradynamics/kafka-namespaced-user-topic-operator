@@ -4,7 +4,6 @@ from argparse import ArgumentParser, Action, ArgumentError
 from pykube import Secret, object_factory
 from .config import globalconf, state
 from .utils import _copy_object, _update_or_create, default_main
-import pprint
 
 @kopf.on.create("", "v1", "secrets", labels={"strimzi.io/kind": "KafkaUser"})
 def kafka_secret_create(body, namespace, name, logger, **kwargs):
@@ -20,12 +19,8 @@ def kafka_secret_create(body, namespace, name, logger, **kwargs):
     corresponding_kafkauser = KafkaUser(state.api, {"metadata":{"namespace":new_secret.metadata["namespace"],
                                                                 "name":name.split("-", maxsplit=1)[1]}})
     corresponding_kafkauser.reload()
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(corresponding_kafkauser)
 
     kopf.adopt([new_secret.obj], corresponding_kafkauser.obj)
-    print("new_secret")
-    pp.pprint(new_secret.obj)
 
     logger.info(
             f"Creating {new_secret.metadata['namespace']}/{new_secret} with a kafka-client.properties with SCRAM-SHA-256 configuration" % new_secret.metadata)

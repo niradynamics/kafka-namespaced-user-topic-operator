@@ -22,32 +22,32 @@ spec:
         command:
         - knuto-secrets
         - -v
-        {{- range .Values.kafkauser_source_namespaces }}
+        {{- range $namespace, $config := .Values.kafkauser_source_namespaces }}
         - --kafka-user-topic-source-namespace
-        - {{ . }}
+        - {{ $namespace }}
         {{- end }}
         {{- range $secret_type, $server := .Values.secret_type_to_bootstrap_server }}
         - --secret-type-to-bootstrap-server
         - {{ $secret_type }}={{ $server }}
         {{- end }}
         - {{ .Values.strimzi_namespace }}
-{{ range $idx, $namespace := .Values.kafkauser_source_namespaces }}
+{{ range $namespace, $config := .Values.kafkauser_source_namespaces }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: knuto-operator-kafkaentities-{{ . }}
+  name: knuto-operator-kafkaentities-{{ $namespace }}
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      knuto: kafkaentities-{{ . }}
+      knuto: kafkaentities-{{ $namespace }}
   template:
     metadata:
       labels:
-        knuto: kafkaentities-{{ . }}
+        knuto: kafkaentities-{{ $namespace }}
         app: knuto
     spec:
       serviceAccountName: knuto-kafka-users-topics
@@ -55,10 +55,13 @@ spec:
       - name: knuto-kafkaentities
         image: {{ $.Values.image }}
         command:
-        - knuto-kafkauser
+        - knuto-kafka-user-topic
         - -v
         - --kafka-user-topic-destination-namespace
         - {{ $.Values.strimzi_namespace }}
+        {{- if eq $config.deletion_enabled true }}
+        - --enable-topic-deletion
+        {{- end }}
         - {{ $namespace }}
 {{ end }}
 

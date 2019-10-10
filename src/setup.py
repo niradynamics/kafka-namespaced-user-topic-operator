@@ -172,7 +172,7 @@ setup(
     # executes the function `main` from this package when invoked:
     entry_points={  # Optional
         'console_scripts': [
-            'knuto-kafkauser=knuto.kafkauser:main',
+            'knuto-kafka-user-topic=knuto.kafka_user_topic:main',
             'knuto-secrets=knuto.secrets:main'
         ],
     },

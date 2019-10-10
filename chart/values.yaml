@@ -1,8 +1,12 @@
 image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto:2019-10-08-3
 strimzi_namespace: kafka
 kafkauser_source_namespaces:
-#  - production
-#  - latest
-  - dev
+  production:
+    deletion_enabled: false
+  latest:
+    deletion_enabled: false
+  dev:
+    deletion_enabled: true
+
 secret_type_to_bootstrap_server:
   "scram-sha-512": "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
