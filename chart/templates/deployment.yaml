@@ -20,6 +20,12 @@ spec:
       containers:
       - name: knuto-secrets
         image: {{ .Values.image }}
+        resources:
+          limits:
+            cpu: 100m
+            memory: 48Mi
+          requests:
+            cpu: 5m
         command:
         - knuto-secrets
         - -v
@@ -56,6 +62,12 @@ spec:
       containers:
       - name: knuto-kafkaentities
         image: {{ $.Values.image }}
+        resources:
+          limits:
+            cpu: 100m
+            memory: 48Mi
+          requests:
+            cpu: 5m
         command:
         - knuto-kafka-user-topic
         - -v
