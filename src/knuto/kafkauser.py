@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Action
 
 import kopf
+from kopf.structs.finalizers import FINALIZER
 from pykube import object_factory
 
 from .utils import _copy_object, _update_or_create, default_main
@@ -27,7 +28,7 @@ def update_fn(body, namespace, name, logger, **kwargs):
     return {'updated': f"{dst_namespace}/{namespace}-{name}"}
 
 
-@kopf.on.delete("kafka.strimzi.io", "v1beta1", "kafkausers", optional=True)
+@kopf.on.delete("kafka.strimzi.io", "v1beta1", "kafkausers")
 def delete_fn(body, namespace, name, logger, **kwargs):
     dst_namespace = globalconf.kafka_user_topic_destination_namespace
     logger.info(f"KafkaUser {namespace}/{name} deleted, deleting copy in {dst_namespace}")
@@ -46,6 +47,7 @@ def _copy_kafkauser(body, namespace, name):
     KafkaUser = object_factory(state.api, "kafka.strimzi.io/v1beta1", "KafkaUser")
     new_kafkauser = KafkaUser(state.api, new_obj)
     new_kafkauser.annotations["knuto.niradynamics.se/source"] = f"{namespace}/{name}"
+    new_kafkauser.annotations["knuto.niradynamics.se/created"] = "true"
 
     return new_kafkauser
 
