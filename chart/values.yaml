@@ -1,10 +1,10 @@
 image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto:2019-10-08-3
 strimzi_namespace: kafka
 kafkauser_source_namespaces:
-#  production:
-#    deletion_enabled: false
-#  latest:
-#    deletion_enabled: false
+  production:
+    deletion_enabled: false
+  latest:
+    deletion_enabled: false
   dev:
     deletion_enabled: true
 
