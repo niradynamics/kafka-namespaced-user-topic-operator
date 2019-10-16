@@ -78,7 +78,7 @@ def _create_new_secret(name, source_namespace, secret_copy):
     broker_bootstrap_servers = globalconf.secret_type_to_hostname_map[secret_type]
 
     if secret_type == "scram-sha-512":
-        password = base64.b64decode(secret_copy["data"]["password"])
+        password = base64.b64decode(secret_copy["data"]["password"]).decode("utf-8")
         kafka_client_properties = f"""sasl.mechanism=SCRAM-SHA-512
 security.protocol=SASL_PLAINTEXT
 sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
