@@ -2,4 +2,4 @@ apiVersion: v1
 appVersion: "0.1"
 description: "Kafka Namespaced User/Topic Operator"
 name: knuto
-version: 0.3.0
+version: 0.4.0
