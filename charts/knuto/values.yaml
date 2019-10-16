@@ -9,4 +9,4 @@ kafkauser_source_namespaces:
     deletion_enabled: true
 
 secret_type_to_bootstrap_server:
-  "scram-sha-512": "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  "scram-sha-512": "production-kafka-bootstrap.kafka.svc.cluster.local:9092"

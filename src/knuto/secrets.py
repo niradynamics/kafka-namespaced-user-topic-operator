@@ -79,13 +79,13 @@ def _create_new_secret(name, source_namespace, secret_copy):
 
     if secret_type == "scram-sha-512":
         password = base64.b64decode(secret_copy["data"]["password"])
-        kafka_client_properties = f"""sasl.mechanism=SCRAM-SHA-256
-    security.protocol=SASL_PLAINTEXT
-    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
-      username="{name}" \
-      password="{password}";
-    bootstrap.servers={broker_bootstrap_servers}
-    """.encode("ascii")
+        kafka_client_properties = f"""sasl.mechanism=SCRAM-SHA-512
+security.protocol=SASL_PLAINTEXT
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+username="{name}" \
+password="{password}";
+bootstrap.servers={broker_bootstrap_servers}
+""".encode("ascii")
         new_secret = Secret(state.api, secret_copy)
         new_secret.obj["data"]["kafka-client.properties"] = base64.b64encode(kafka_client_properties).decode("ascii")
 
