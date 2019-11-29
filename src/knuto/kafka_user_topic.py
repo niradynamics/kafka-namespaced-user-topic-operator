@@ -129,6 +129,7 @@ def delete_kafkatopic(body, namespace, name, logger, **kwargs):
     dst_namespace = globalconf.kafka_user_topic_destination_namespace
     if not globalconf.kafka_topic_deletion_enabled:
         logger.warning(f"KafkaTopic {namespace}/{name} deleted, deletion not enabled, not deleting copy in {dst_namespace}")
+        return {'not_deleting':f"Deletion of KafkaTopic not enabled for namespace {namespace}"}
 
     logger.info(f"KafkaTopic {namespace}/{name} deleted, deleting copy in {dst_namespace}")
     to_be_deleted = _copy_kafkatopic(body, namespace, name)
