@@ -1,4 +1,4 @@
-image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto:f83fdc
+image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto:f83fdc4
 strimzi_namespace: kafka
 kafkauser_source_namespaces:
   production:
