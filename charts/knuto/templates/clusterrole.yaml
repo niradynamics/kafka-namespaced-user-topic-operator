@@ -20,6 +20,12 @@ rules:
   - apiGroups: [""]
     resources: [secrets]
     verbs: [list, watch, get, patch]
+  # knuto-secrets need to read KafkaUser from the Strimzi-managed namespace
+  # in order to read the annotation that tells us which namespace the KafkaUser
+  # was copied *from*
+  - apiGroups: [kafka.strimzi.io]
+    resources: [kafkausers]
+    verbs: [get]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
