@@ -5,20 +5,25 @@ from pykube import Secret, object_factory
 from .config import globalconf, state
 from .utils import _copy_object, _update_or_create, default_main
 
+SOURCE_ANNOTATION = "knuto.niradynamics.se/source"
+
+
 @kopf.on.create("", "v1", "secrets", labels={"strimzi.io/kind": "KafkaUser"})
 def kafka_secret_create(body, namespace, name, logger, **kwargs):
     new_obj = _copy_object(body)
 
-    if not _should_copy(name, namespace, new_obj, logger):
+    source_namespace = _source_namespace_for_secret(namespace, name, logger)
+
+    if not _should_copy(name, namespace, source_namespace, body, logger):
         return
 
-    new_secret = _create_new_secret(name, namespace, new_obj)
+    new_secret = _create_new_secret(name, namespace, source_namespace, new_obj)
 
-    KafkaUser = object_factory(state.api, "kafka.strimzi.io/v1beta1", "KafkaUser")
-
-    corresponding_kafkauser = KafkaUser(state.api, {"metadata":{"namespace":new_secret.metadata["namespace"],
-                                                                "name":name.split("-", maxsplit=1)[1]}})
-    corresponding_kafkauser.reload()
+    # What we do here is to find the KafkaUser in the source namespace, and then let that adopt
+    # the newly created secret. This gives us automatic deletion of the secret in the source namespace
+    # if the KafkaUser is removed in the source namespace.
+    corresponding_kafkauser = _load_kafkauser(new_secret.metadata["namespace"],
+                                              name[len(source_namespace)+1:])
 
     kopf.adopt([new_secret.obj], corresponding_kafkauser.obj)
 
@@ -29,14 +34,40 @@ def kafka_secret_create(body, namespace, name, logger, **kwargs):
     return {"copied_to": f"{new_secret.metadata['namespace']}/{new_secret}"}
 
 
+def _load_kafkauser(namespace, name):
+    KafkaUser = object_factory(state.api, "kafka.strimzi.io/v1beta1", "KafkaUser")
+
+    kafkauser = KafkaUser(state.api, {"metadata": {"namespace": namespace, "name": name}})
+    kafkauser.reload()
+
+    return kafkauser
+
+
+def _source_namespace_for_secret(namespace, name, logger):
+    """Load the KafkaUser in the namespace handled by strimzi that corresponds to the newly created/updated
+    secret, and check its annotations to find the namespace it was originally created in"""
+
+    kafkauser = _load_kafkauser(namespace, name)
+
+    if not SOURCE_ANNOTATION in kafkauser.annotations:
+        logger.info(f"Skipping secret {namespace}/{name} has no {SOURCE_ANNOTATION} annotation")
+        return None
+
+    source_namespace = kafkauser.annotations[SOURCE_ANNOTATION].split("/")[0]
+
+    return source_namespace
+
+
 @kopf.on.update("", "v1", "secrets", labels={"strimzi.io/kind": "KafkaUser"})
 def kafka_secret(body, namespace, name, logger, **kwargs):
     new_obj = _copy_object(body)
 
-    if not _should_copy(name, namespace, new_obj, logger):
+    source_namespace = _source_namespace_for_secret(namespace, name, logger)
+
+    if not _should_copy(name, namespace, source_namespace, body, logger):
         return
 
-    new_secret = _create_new_secret(name, namespace, new_obj)
+    new_secret = _create_new_secret(name, namespace, source_namespace, new_obj)
 
     logger.info(
             f"Updating {new_secret.metadata['namespace']}/{new_secret} with a kafka-client.properties with SCRAM-SHA-256 configuration" % new_secret.metadata)
@@ -46,15 +77,12 @@ def kafka_secret(body, namespace, name, logger, **kwargs):
 
 
 
-def _should_copy(name, namespace, obj, logger):
-    if "-" not in name:
-        logger.debug("Skipping secret as it doesn't have a \"-\" in its name")
+def _should_copy(name, namespace, source_namespace, obj, logger):
+    if source_namespace is None:
         return False
 
-    (dst_namespace, dst_name) = name.split("-", maxsplit=1)
-
-    if dst_namespace not in globalconf.kafka_user_topic_source_namespaces:
-        logger.info(f"Skipping as Secret's name prefix ({dst_namespace} is not in our list of destination namespaces")
+    if not source_namespace in globalconf.kafka_user_topic_source_namespaces:
+        logger.info(f"Skipping as Secret's source namespace {{source_namespace}} is not in our list of destination namespaces")
         return False
 
     if "password" in obj["data"]:
@@ -65,9 +93,9 @@ def _should_copy(name, namespace, obj, logger):
     return False
 
 
-def _create_new_secret(name, source_namespace, secret_copy):
+def _create_new_secret(name, strimzi_namespace, destination_namespace, secret_copy):
 
-    (dst_namespace, dst_name) = name.split("-", maxsplit=1)
+    dst_name = name[len(destination_namespace)+1:]
 
     # Slightly silly, but we'll only reach this point if _should_copy already said it's there
     # Later on, we'll handle more types, so this is future extension point.
@@ -92,9 +120,9 @@ bootstrap.servers={broker_bootstrap_servers}
         # Deleting to ensure we don't react on the secret we're creating
         del new_secret.labels["strimzi.io/kind"]
 
-        new_secret.annotations["knuto.niradynamics.se/source"] = f"{source_namespace}/{name}"
+        new_secret.annotations["knuto.niradynamics.se/source"] = f"{strimzi_namespace}/{name}"
         new_secret.metadata["name"] = f"{dst_name}-kafka-config"
-        new_secret.metadata["namespace"] = dst_namespace
+        new_secret.metadata["namespace"] = destination_namespace
 
         return new_secret
 
