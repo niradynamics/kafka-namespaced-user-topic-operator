@@ -1,5 +1,8 @@
+# image -- Which knuto docker image to install
 image: 036535796760.dkr.ecr.eu-west-1.amazonaws.com/erfor/knuto:f83fdc4
+# strimzi_namespace -- The namespace in which the Strimzi User and Topic operator listens for KafkaUser and KafkaTopic CRDs.
 strimzi_namespace: kafka
+# kafkauser_source_namespace -- Mapping of namespaces, with the setting for enabling or disabling deletion of KafkaTopic CRDs when they are removed in each namespace. One KNUTO instance will be started per namespace.
 kafkauser_source_namespaces:
   production:
     deletion_enabled: false
@@ -8,5 +11,6 @@ kafkauser_source_namespaces:
   dev:
     deletion_enabled: true
 
+# secret_type_to_bootstrap_server -- MApping of secret type to the DNS name an port of the Kafka service. Used to construct kafka-client.properties in Secrets placed in the namespaces configured in kafkauser_source_namespaces
 secret_type_to_bootstrap_server:
   "scram-sha-512": "production-kafka-bootstrap.kafka.svc.cluster.local:9092"
