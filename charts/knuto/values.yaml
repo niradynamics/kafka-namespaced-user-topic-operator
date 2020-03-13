@@ -6,10 +6,13 @@ strimzi_namespace: kafka
 kafkauser_source_namespaces:
   production:
     deletion_enabled: false
+    allowed_non_namespaced_topics: []
   latest:
     deletion_enabled: false
+    allowed_non_namespaced_topics: []
   dev:
     deletion_enabled: true
+    allowed_non_namespaced_topics: []
 
 # secret_type_to_bootstrap_server -- MApping of secret type to the DNS name an port of the Kafka service. Used to construct kafka-client.properties in Secrets placed in the namespaces configured in kafkauser_source_namespaces
 secret_type_to_bootstrap_server:
