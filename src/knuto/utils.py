@@ -42,7 +42,6 @@ def default_main(program_argparsers):
 
     kopf.configure(verbose=args.verbose)
 
-
     print(f"globalconf: {globalconf.current_values()}")
 
     login_pykube()

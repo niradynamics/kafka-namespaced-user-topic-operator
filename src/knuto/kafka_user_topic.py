@@ -29,8 +29,13 @@ def check_acl_allowed(logger, namespace, acls):
         if resource["patternType"] not in ["literal", "prefix"]:
             log_and_raise(f"Unsupported patternType {resource['patternType']}, operator needs upgrade?")
 
-        if operation == "Write" and not resource["name"].startswith(f"{namespace}-"):
-            log_and_raise(f"ACL {idx}: resource name {resource['name']} does not begin with {namespace}-, operation Write not allowed")
+        if operation == "Write" and (
+                not resource["name"].startswith(f"{namespace}-") and
+                resource["name"] not in globalconf.allowed_non_namespaced_topics):
+            log_and_raise(f"ACL {idx}: resource name {resource['name']} does "
+                          f"not begin with {namespace}- or are included in "
+                          "allowed non namespaced topics, operation Write not "
+                          "allowed")
 
         idx += 1
 
@@ -165,9 +170,15 @@ class StoreTopicDeletionEnabled(Action):
         globalconf.kafka_topic_deletion_enabled = True
 
 
+class StoreAllowedNonNamespacedTopics(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        globalconf.allowed_non_namespaced_topics = values
+
+
 def main():
     program_args = ArgumentParser()
     program_args.add_argument("--kafka-user-topic-destination-namespace", action=StoreTopicDestinationNamespace)
     program_args.add_argument("--enable-topic-deletion", action=StoreTopicDeletionEnabled)
+    program_args.add_argument("--allowed-non-namespaced-topics", nargs='*', action=StoreAllowedNonNamespacedTopics)
 
     return default_main([program_args])
