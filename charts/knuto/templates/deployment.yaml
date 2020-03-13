@@ -76,6 +76,11 @@ spec:
         {{- if eq $config.deletion_enabled true }}
         - --enable-topic-deletion
         {{- end }}
+        - --allowed-non-namespaced-topics
+        {{- range $config.allowed_non_namespaced_topics }}
+        - {{ . }}
+        {{- end }}
+        - --
         - {{ $namespace }}
 {{ end }}
 
