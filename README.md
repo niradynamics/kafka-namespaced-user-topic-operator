@@ -43,7 +43,9 @@ the *staging* namespace should have a name that starts with "*staging-*". The sa
 
 On the permissions/ACL side, it is assumed that a [KafkaUser] in any namespace is allowed to **read** data in all topics
 in the Kafka cluster, but only a [KafkaUser] in the namespace associated with a topic (i.e where the topic name is prefixed
-with the namespace name) is allowed to **write** to a topic.
+with the namespace name) is allowed to **write** to a topic. It is possible to configure extra allowed topics which
+has not been prefixed with the namespace by specifying them with the option `--allowed-non-namespaced-topics` to
+`knuto-kafka-user-topic`.
 
 This works well in a staging/production scenario, where for example an application in *staging* can read the
 production data from a topic prefixed *production-*, but it can not write to any production topic, prohibiting

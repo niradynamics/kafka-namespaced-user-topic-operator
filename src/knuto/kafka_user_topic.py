@@ -33,7 +33,7 @@ def check_acl_allowed(logger, namespace, acls):
                 not resource["name"].startswith(f"{namespace}-") and
                 resource["name"] not in globalconf.allowed_non_namespaced_topics):
             log_and_raise(f"ACL {idx}: resource name {resource['name']} does "
-                          f"not begin with {namespace}- or are included in "
+                          f"neither begin with {namespace}- nor is it included in "
                           "allowed non namespaced topics, operation Write not "
                           "allowed")
 
@@ -179,6 +179,8 @@ def main():
     program_args = ArgumentParser()
     program_args.add_argument("--kafka-user-topic-destination-namespace", action=StoreTopicDestinationNamespace)
     program_args.add_argument("--enable-topic-deletion", action=StoreTopicDeletionEnabled)
-    program_args.add_argument("--allowed-non-namespaced-topics", nargs='*', action=StoreAllowedNonNamespacedTopics)
+    program_args.add_argument("--allowed-non-namespaced-topics", nargs='*', action=StoreAllowedNonNamespacedTopics,
+                              help='List of topics which has not been prefixed with the namespace, '
+                                   'that are allowed to create kafka users with write permissions for')
 
     return default_main([program_args])
