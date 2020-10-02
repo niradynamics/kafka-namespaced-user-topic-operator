@@ -9,9 +9,18 @@ from kopf.clients.auth import login_pykube, get_pykube_api
 
 from .config import globalconf, state
 
+
 def _copy_object(obj):
     new_obj = deepcopy(obj)
-    for key in ["resourceVersion", "selfLink", "uid", "creationTimestamp", "generation", "finalizers", "ownerReferences"]:
+    for key in [
+        "resourceVersion",
+        "selfLink",
+        "uid",
+        "creationTimestamp",
+        "generation",
+        "finalizers",
+        "ownerReferences",
+    ]:
         if key in new_obj["metadata"]:
             del new_obj["metadata"][key]
 
@@ -22,12 +31,9 @@ def run_kopf(namespace):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    kopf.login()                    # tokens & certs
+    kopf.login()  # tokens & certs
 
-    loop.run_until_complete(kopf.operator(
-        standalone=True,
-        namespace=namespace
-    ))
+    loop.run_until_complete(kopf.operator(standalone=True, namespace=namespace))
 
 
 script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -35,7 +41,7 @@ script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 # This script dir is used from multiple functions
 def default_main(program_argparsers):
     argparser = argparse.ArgumentParser(parents=program_argparsers, add_help=False)
-    argparser.add_argument("--verbose", "-v", default=False, action='store_true')
+    argparser.add_argument("--verbose", "-v", default=False, action="store_true")
     argparser.add_argument("namespace", help="Namespace to watch for changes")
 
     args = argparser.parse_args()

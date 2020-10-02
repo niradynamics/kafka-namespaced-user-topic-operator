@@ -1,5 +1,6 @@
 #
 
+
 class globalconf:
     kafka_user_topic_destination_namespace = None
     kafka_user_topic_source_namespaces = set([])
@@ -10,13 +11,14 @@ class globalconf:
     @classmethod
     def current_values(cls):
         pairs = []
-        for name in [n for n in dir(cls) if not n.startswith("__") and not n == "current_values"]:
+        for name in [
+            n for n in dir(cls) if not n.startswith("__") and not n == "current_values"
+        ]:
             val = getattr(cls, name)
             pairs.append(f"{name}={val}")
 
         return ",".join(pairs)
 
+
 class state:
     api = None
-
-
