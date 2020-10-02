@@ -38,15 +38,30 @@ def check_acl_allowed(logger, namespace, acls):
                 f"Unsupported patternType {resource['patternType']}, operator needs upgrade?"
             )
 
-        if operation == "Write" and (
-            not resource["name"].startswith(f"{namespace}-")
-            and resource["name"] not in globalconf.allowed_non_namespaced_topics
+        if (
+            operation == "Read"
+            and not globalconf.cross_namespace_read_enabled
+            and not resource["name"].startswith(f"{namespace}-")
+            and resource["name"] not in globalconf.read_allowed_non_namespaced_topics
+        ):
+            log_and_raise(
+                f"ACL {idx}: resource name {resource['name']} does "
+                f"neither begin with {namespace}- nor is it included in "
+                "allowed non namespaced topics, operation Read not "
+                "allowed."
+            )
+
+        if (
+            operation == "Write"
+            and not globalconf.cross_namespace_write_enabled
+            and not resource["name"].startswith(f"{namespace}-")
+            and resource["name"] not in globalconf.write_allowed_non_namespaced_topics
         ):
             log_and_raise(
                 f"ACL {idx}: resource name {resource['name']} does "
                 f"neither begin with {namespace}- nor is it included in "
                 "allowed non namespaced topics, operation Write not "
-                "allowed"
+                "allowed."
             )
 
         idx += 1
@@ -208,9 +223,40 @@ class StoreTopicDeletionEnabled(Action):
         globalconf.kafka_topic_deletion_enabled = True
 
 
-class StoreAllowedNonNamespacedTopics(Action):
+class StoreEnableCrossNamespaceRead(Action):
+    def __init__(self, *args, **kwargs):
+        kwargs["nargs"] = 0
+        super(StoreEnableCrossNamespaceRead, self).__init__(*args, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
-        globalconf.allowed_non_namespaced_topics = values
+        globalconf.cross_namespace_read_enabled = True
+
+
+class StoreEnableCrossNamespaceWrite(Action):
+    def __init__(self, *args, **kwargs):
+        kwargs["nargs"] = 0
+        super(StoreEnableCrossNamespaceWrite, self).__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        globalconf.cross_namespace_write_enabled = True
+
+
+class StoreReadAllowedCrossNamespaceTopics(Action):
+    def __init__(self, *args, **kwargs):
+        kwargs["nargs"] = 0
+        super(StoreReadAllowedCrossNamespaceTopics, self).__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        globalconf.read_allowed_non_namespaced_topics = values
+
+
+class StoreWriteAllowedNonNamespacedTopics(Action):
+    def __init__(self, *args, **kwargs):
+        kwargs["nargs"] = 0
+        super(StoreWriteAllowedNonNamespacedTopics, self).__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        globalconf.write_allowed_non_namespaced_topics = values
 
 
 def main():
@@ -223,11 +269,29 @@ def main():
         "--enable-topic-deletion", action=StoreTopicDeletionEnabled
     )
     program_args.add_argument(
-        "--allowed-non-namespaced-topics",
+        "--enable-cross-namespace-read",
+        action=StoreEnableCrossNamespaceRead,
+        help="Use this flag to enable reads from all other namespaces.",
+    )
+    program_args.add_argument(
+        "--read-allowed-non-namespaced-topics",
         nargs="*",
-        action=StoreAllowedNonNamespacedTopics,
+        action=StoreReadAllowedCrossNamespaceTopics,
         help="List of topics which has not been prefixed with the namespace, "
-        "that are allowed to create kafka users with write permissions for",
+        "that are allowed to create kafka users with read permissions for.",
+    )
+
+    program_args.add_argument(
+        "--enable-cross-namespace-write",
+        action=StoreEnableCrossNamespaceWrite,
+        help="Use this flag to enable writes to all other namespaces.",
+    )
+    program_args.add_argument(
+        "--write-allowed-non-namespaced-topics",
+        nargs="*",
+        action=StoreWriteAllowedNonNamespacedTopics,
+        help="List of topics which has not been prefixed with the namespace, "
+        "that are allowed to create kafka users with write permissions for.",
     )
 
     return default_main([program_args])

@@ -76,10 +76,20 @@ spec:
         {{- if eq $config.deletion_enabled true }}
         - --enable-topic-deletion
         {{- end }}
-        - --allowed-non-namespaced-topics
-        {{- range $config.allowed_non_namespaced_topics }}
-        - {{ . }}
-        {{- end }}
+        { { - if eq $config.cross_namespace_read_allowed true } }
+        - --enable-cross-namespace-read
+        { { - end } }
+        - --read-allowed-non-namespaced-topics
+        { { - range $config.read_allowed_non_namespaced_topics } }
+        - { { . } }
+        { { - end } }
+        { { - if eq $config.cross_namespace_write_allowed true } }
+        - --enable-cross-namespace-write
+        { { - end } }
+        - --write-allowed-non-namespaced-topics
+        { { - range $config.write_allowed_non_namespaced_topics } }
+        - { { . } }
+        { { - end } }
         - --
         - {{ $namespace }}
 {{ end }}

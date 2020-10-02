@@ -41,15 +41,18 @@ KNUTO works with the assumption that topics and users are prepended with the nam
 So in our example with the *staging* and *production* namespaces, any topic that is **written** by an application in
 the *staging* namespace should have a name that starts with "*staging-*". The same goes for users.
 
-On the permissions/ACL side, it is assumed that a [KafkaUser] in any namespace is allowed to **read** data in all topics
-in the Kafka cluster, but only a [KafkaUser] in the namespace associated with a topic (i.e where the topic name is prefixed
-with the namespace name) is allowed to **write** to a topic. It is possible to configure extra allowed topics which
-has not been prefixed with the namespace by specifying them with the option `--allowed-non-namespaced-topics` to
-`knuto-kafka-user-topic`.
+On the permissions/ACL side, it is assumed that a [KafkaUser] in any namespace
+is allowed to **read** from topics and **write** to topics in the same
+namespace. It is possible to allow extra topics to read from with
+`--read-allowed-non-namespaced-topics` and extra topics to write from with
+`--write-allowed-non-namespaced-topics`. Is is also possible to enable reading
+from all namespaces with `--enable-cross-namespace-read` and writing to all
+namespaces with `--enable-cross-namespace-write`.
 
-This works well in a staging/production scenario, where for example an application in *staging* can read the
-production data from a topic prefixed *production-*, but it can not write to any production topic, prohibiting
-modification of the production environment.
+It is possible to have a configuration which works well in a staging/production
+scenario, where for example an application in *staging* can read the production
+data from a topic prefixed *production-*, but it can not write to any production
+topic, prohibiting modification of the production environment.
 
 ## How it works
 
