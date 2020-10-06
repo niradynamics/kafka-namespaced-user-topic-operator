@@ -242,19 +242,11 @@ class StoreEnableCrossNamespaceWrite(Action):
 
 
 class StoreReadAllowedCrossNamespaceTopics(Action):
-    def __init__(self, *args, **kwargs):
-        kwargs["nargs"] = 0
-        super(StoreReadAllowedCrossNamespaceTopics, self).__init__(*args, **kwargs)
-
     def __call__(self, parser, namespace, values, option_string=None):
         globalconf.read_allowed_non_namespaced_topics = values
 
 
 class StoreWriteAllowedNonNamespacedTopics(Action):
-    def __init__(self, *args, **kwargs):
-        kwargs["nargs"] = 0
-        super(StoreWriteAllowedNonNamespacedTopics, self).__init__(*args, **kwargs)
-
     def __call__(self, parser, namespace, values, option_string=None):
         globalconf.write_allowed_non_namespaced_topics = values
 
