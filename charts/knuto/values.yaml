@@ -1,5 +1,5 @@
 # image -- Which knuto docker image to install
-image: niradynamics/knuto:94f0e50
+image: niradynamics/knuto:84a6543
 
 # strimzi_namespace
 # -- The namespace in which the Strimzi User and Topic

@@ -2,7 +2,7 @@ knuto
 =====
 Kafka Namespaced User/Topic Operator
 
-Current chart version is `0.9.0`
+Current chart version is `0.10.0`
 
 
 
@@ -12,7 +12,7 @@ Current chart version is `0.9.0`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| image | string | `"niradynamics/knuto:94f0e50"` | Which knuto docker image to install |
+| image | string | `"niradynamics/knuto:84a6543"` | Which knuto docker image to install |
 | kafkauser_source_namespaces.dev.deletion_enabled | bool | `true` |  |
 | kafkauser_source_namespaces.latest.deletion_enabled | bool | `false` |  |
 | kafkauser_source_namespaces.production.deletion_enabled | bool | `false` |  |
