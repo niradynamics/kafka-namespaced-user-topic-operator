@@ -28,7 +28,6 @@ spec:
             cpu: 5m
         command:
         - knuto-secrets
-        - -v
         {{- range $namespace, $config := .Values.kafkauser_source_namespaces }}
         - --kafka-user-topic-source-namespace
         - {{ $namespace }}
