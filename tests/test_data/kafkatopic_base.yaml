@@ -1,0 +1,9 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: {{ name }}
+  namespace: {{ namespace }}
+spec:
+  topicName: {{ name }}
+  partitions: 1
+  replicas: 1

@@ -3,8 +3,8 @@ from argparse import ArgumentParser, Action
 import kopf
 from pykube import object_factory
 
-from .utils import _copy_object, _update_or_create, default_main
-from .config import globalconf, state
+from knuto.config import globalconf, state
+from knuto.utils import _copy_object, _update_or_create, default_main
 
 
 class AclNotAllowed(Exception):
@@ -68,30 +68,23 @@ def check_acl_allowed(logger, namespace, acls):
 
 
 @kopf.on.create("kafka.strimzi.io", "v1beta1", "kafkausers")
-def create_kafkauser(body, namespace, name, logger, **kwargs):
-    dst_namespace = globalconf.kafka_user_topic_destination_namespace
-
-    try:
-        check_acl_allowed(
-            logger, namespace, body["spec"]["authorization"].get("acls", [])
-        )
-    except AclNotAllowed as e:
-        return {"acl_not_allowed": str(e)}
-
-    logger.info(
-        f"KafkaUser {namespace}/{name} created, creating copy in {dst_namespace}"
+def create_kafkauser(body, namespace, name, logger, **_):
+    _update_or_create_kafkauser(
+        body, namespace, name, logger, return_key="copied_to", logged_action="created"
     )
-    new_kafkauser = _copy_kafkauser(body, namespace, name)
-    _update_or_create(new_kafkauser)
-    return {"copied_to": f"{dst_namespace}/{namespace}-{name}"}
 
 
 @kopf.on.update("kafka.strimzi.io", "v1beta1", "kafkausers")
-def update_kafkauser(body, namespace, name, logger, **kwargs):
-    dst_namespace = globalconf.kafka_user_topic_destination_namespace
-    logger.info(
-        f"KafkaUser {namespace}/{name} updated, updating copy in {dst_namespace}"
+def update_kafkauser(body, namespace, name, logger, **_):
+    _update_or_create_kafkauser(
+        body, namespace, name, logger, return_key="updated", logged_action="updated"
     )
+
+
+def _update_or_create_kafkauser(
+    body, namespace, name, logger, *, return_key, logged_action
+):
+    dst_namespace = globalconf.kafka_user_topic_destination_namespace
 
     try:
         check_acl_allowed(
@@ -100,14 +93,16 @@ def update_kafkauser(body, namespace, name, logger, **kwargs):
     except AclNotAllowed as e:
         return {"acl_not_allowed": str(e)}
 
+    logger.info(
+        f"KafkaUser {namespace}/{name} {logged_action}, copying change to {dst_namespace}"
+    )
     new_kafkauser = _copy_kafkauser(body, namespace, name)
     _update_or_create(new_kafkauser)
-
-    return {"updated": f"{dst_namespace}/{namespace}-{name}"}
+    return {return_key: f"{dst_namespace}/{namespace}-{name}"}
 
 
 @kopf.on.delete("kafka.strimzi.io", "v1beta1", "kafkausers")
-def delete_kafkauser(body, namespace, name, logger, **kwargs):
+def delete_kafkauser(body, namespace, name, logger, **_):
     dst_namespace = globalconf.kafka_user_topic_destination_namespace
     logger.info(
         f"KafkaUser {namespace}/{name} deleted, deleting copy in {dst_namespace}"
@@ -135,27 +130,22 @@ def _copy_kafkauser(body, namespace, name):
 
 
 @kopf.on.create("kafka.strimzi.io", "v1beta1", "kafkatopics")
-def create_kafkatopic(body, namespace, name, logger, **kwargs):
-    dst_namespace = globalconf.kafka_user_topic_destination_namespace
-
-    topic_name = body["spec"].get("topicName", name)
-    if not topic_name.startswith(f"{namespace}-"):
-        logger.error(
-            f"KafkaTopic {namespace}/{name}'s topicName or name not prefixed with {namespace}-, not copying!"
-        )
-        return {"policy_violation": f"Topic name should be prefixed with {namespace}-"}
-
-    logger.info(
-        f"KafkaTopic {namespace}/{name} created, creating copy in {dst_namespace}"
+def create_kafkatopic(body, namespace, name, logger, **_):
+    return _update_or_create_kafkatopic(
+        body, namespace, name, logger, return_key="copied_to", logged_action="created"
     )
-    new_kafkatopic = _copy_kafkatopic(body, namespace, name)
-    _update_or_create(new_kafkatopic)
-
-    return {"copied_to": f"{dst_namespace}/{namespace}-{name}"}
 
 
 @kopf.on.update("kafka.strimzi.io", "v1beta1", "kafkatopics")
-def update_kafkatopic(body, namespace, name, logger, **kwargs):
+def update_kafkatopic(body, namespace, name, logger, **_):
+    return _update_or_create_kafkatopic(
+        body, namespace, name, logger, return_key="updated", logged_action="updated"
+    )
+
+
+def _update_or_create_kafkatopic(
+    body, namespace, name, logger, *, return_key, logged_action
+):
     dst_namespace = globalconf.kafka_user_topic_destination_namespace
 
     topic_name = body["spec"].get("topicName", name)
@@ -166,16 +156,16 @@ def update_kafkatopic(body, namespace, name, logger, **kwargs):
         return {"policy_violation": f"Topic name should be prefixed with {namespace}-"}
 
     logger.info(
-        f"KafkaTopic {namespace}/{name} updated, updating copy in {dst_namespace}"
+        f"KafkaTopic {namespace}/{name} {logged_action}, copying change to {dst_namespace}"
     )
     new_kafkatopic = _copy_kafkatopic(body, namespace, name)
     _update_or_create(new_kafkatopic)
 
-    return {"updated": f"{dst_namespace}/{namespace}-{name}"}
+    return {return_key: f"{dst_namespace}/{namespace}-{name}"}
 
 
 @kopf.on.delete("kafka.strimzi.io", "v1beta1", "kafkatopics")
-def delete_kafkatopic(body, namespace, name, logger, **kwargs):
+def delete_kafkatopic(body, namespace, name, logger, **_):
     dst_namespace = globalconf.kafka_user_topic_destination_namespace
     if not globalconf.kafka_topic_deletion_enabled:
         logger.warning(
@@ -287,3 +277,7 @@ def main():
     )
 
     return default_main([program_args])
+
+
+if __name__ == "__main__":
+    main()

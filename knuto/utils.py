@@ -3,15 +3,25 @@ import asyncio
 import inspect
 import os
 from copy import deepcopy
+from typing import Mapping
 
+import pykube
 import kopf
-from kopf.clients.auth import login_pykube, get_pykube_api
+
+import logging
 
 from .config import globalconf, state
 
+logger = logging.getLogger(__name__)
 
-def _copy_object(obj):
-    new_obj = deepcopy(obj)
+
+def _copy_object(obj: Mapping):
+    """
+    Performs a deep copy of a Mapping.
+    Converts to a basic dict to avoid problems with kopf Body mapping type.
+    Pykube expects json-serializable types, i.e. basic types.
+    """
+    new_obj = deepcopy(dict(obj))
     for key in [
         "resourceVersion",
         "selfLink",
@@ -31,12 +41,11 @@ def run_kopf(namespace):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    kopf.login()  # tokens & certs
-
     loop.run_until_complete(kopf.operator(standalone=True, namespace=namespace))
 
 
 script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
 
 # This script dir is used from multiple functions
 def default_main(program_argparsers):
@@ -50,14 +59,16 @@ def default_main(program_argparsers):
 
     print(f"globalconf: {globalconf.current_values()}")
 
-    login_pykube()
-    state.api = get_pykube_api()
+    config = pykube.KubeConfig.from_file()
+    state.api = pykube.HTTPClient(config)
 
     run_kopf(args.namespace)
 
 
 def _update_or_create(obj):
     if obj.exists():
+        logger.info("Update object %s" % repr(obj))
         obj.update()
     else:
+        logger.info("Create object %s" % repr(obj))
         obj.create()

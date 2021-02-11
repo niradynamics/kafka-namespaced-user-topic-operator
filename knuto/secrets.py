@@ -1,7 +1,9 @@
 import base64
-import kopf
 from argparse import ArgumentParser, Action, ArgumentError
+
+import kopf
 from pykube import Secret, object_factory
+
 from .config import globalconf, state
 from .utils import _copy_object, _update_or_create, default_main
 
@@ -174,3 +176,7 @@ def main():
     )
 
     return default_main([program_args])
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,3 @@
+kopf==1.29.2
+pykube-ng
+pyhocon

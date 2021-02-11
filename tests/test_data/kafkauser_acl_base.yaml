@@ -1,0 +1,5 @@
+operation: {{ operation }}
+resource:
+  name: {{ name }}
+  patternType: literal
+  type: group
