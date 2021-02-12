@@ -21,11 +21,7 @@ spec:
       - name: knuto-secrets
         image: {{ .Values.image }}
         resources:
-          limits:
-            cpu: 100m
-            memory: 48Mi
-          requests:
-            cpu: 5m
+{{ toYaml .Values.resourcesSecrets | indent 10 }}
         command:
         - knuto-secrets
         {{- range $namespace, $config := .Values.kafkauser_source_namespaces }}
@@ -62,11 +58,7 @@ spec:
       - name: knuto-kafkaentities
         image: {{ $.Values.image }}
         resources:
-          limits:
-            cpu: 100m
-            memory: 48Mi
-          requests:
-            cpu: 5m
+{{ toYaml $.Values.resourcesKafka | indent 10 }}
         command:
         - knuto-kafka-user-topic
         - -v

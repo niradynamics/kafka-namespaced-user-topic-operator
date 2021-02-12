@@ -1,6 +1,20 @@
 # image -- Which knuto docker image to install
 image: niradynamics/knuto:84a6543
 
+resourcesSecrets:
+  limits:
+    cpu: 100m
+    memory: 48Mi
+  requests:
+    cpu: 5m
+
+resourcesKafka:
+  limits:
+    cpu: 100m
+    memory: 48Mi
+  requests:
+    cpu: 5m
+
 # strimzi_namespace
 # -- The namespace in which the Strimzi User and Topic
 #    operator listens for KafkaUser and KafkaTopic CRDs.
