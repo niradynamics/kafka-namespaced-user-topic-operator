@@ -59,10 +59,21 @@ def default_main(program_argparsers):
 
     print(f"globalconf: {globalconf.current_values()}")
 
-    config = pykube.KubeConfig.from_file()
-    state.api = pykube.HTTPClient(config)
+    kopf.login_via_pykube(logger=logger)
+    state.api = pykube.HTTPClient(_get_pykube_config())
 
     run_kopf(args.namespace)
+
+
+def _get_pykube_config():
+    try:
+        config = pykube.KubeConfig.from_service_account()
+        logger.debug("Pykube is configured in cluster with service account.")
+    except FileNotFoundError:
+        config = pykube.KubeConfig.from_file()
+        logger.debug("Pykube is configured via kubeconfig file.")
+
+    return config
 
 
 def _update_or_create(obj):
