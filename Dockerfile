@@ -4,5 +4,6 @@ FROM python:3.8-slim
 COPY requirements.txt /src/requirements.txt
 RUN pip install -r /src/requirements.txt
 
-COPY * /src/
-RUN cd /src && pip install . && rm -r /src
+COPY knuto /src/knuto
+COPY setup.py README.md /src/
+RUN cd /src && pip install .
